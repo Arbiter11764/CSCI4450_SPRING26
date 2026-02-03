@@ -1,4 +1,13 @@
-/* styles.css */
-<style> 
-p { color: purple; }
-<style>
+body {background-color: rgb(147, 202, 237);}
+
+h1{
+color: RGB(0,168,107);
+font-family: fangsong;
+font-size:40px;
+}
+
+p{
+font-family: Serif;
+color: black;
+font-size: 20px;
+}
