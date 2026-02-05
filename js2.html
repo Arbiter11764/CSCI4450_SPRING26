@@ -1,12 +1,29 @@
-<script>
+<head> 
   
+  <script>
   var name="john"
   var age;
   const YOUTH=18;
 
   if(age >YOUTH)
-      console.log("hello oneonta" +name);
+  {
+    console.log("hello oneonta" +name);
+    output= "hello Oneonta"+ name
+  }
   else 
-      console.log("hello Junior" +name);
-  
+  {
+    console.log("hello Junior" +name);
+    output="hello Junior" + name
+  }
+    
+    target=document.GetElementbyID(id1)
+    target.innerhtml=output
 </script>
+  
+</head>
+<body>
+
+<h1 id="id1"> Old Heading </h1>
+  
+</body>
+
