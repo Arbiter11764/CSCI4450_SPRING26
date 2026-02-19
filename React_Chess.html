@@ -43,44 +43,57 @@ function ChessApp() {
     neon: ['bg-pink-400','bg-purple-900']
   };
 
+  // Load saved game
   useEffect(() => {
     const saved = localStorage.getItem("savedGame");
     if (saved) setGame(new Chess(saved));
   }, []);
 
+  // Chess clock
   useEffect(() => {
     const timer = setInterval(() => {
       if (!game.game_over()) {
-        if (game.turn() === 'w') setWhiteTime(t => t>0 ? t-1 : 0);
-        else setBlackTime(t => t>0 ? t-1 : 0);
+        if (game.turn() === 'w') {
+          setWhiteTime(t => t > 0 ? t - 1 : 0);
+        } else {
+          setBlackTime(t => t > 0 ? t - 1 : 0);
+        }
       }
-    },1000);
-    return ()=>clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
   }, [game]);
 
   const board = game.board();
 
-  function getSquareLabel(i,j){
-    return String.fromCharCode(97+j)+(8-i);
+  function getSquareLabel(i, j) {
+    return String.fromCharCode(97 + j) + (8 - i);
   }
 
-  function handleSquareClick(square){
-    if(selectedSquare){
-      const move = game.move({
-        from:selectedSquare,
-        to:square,
-        promotion:'q'
+  function handleSquareClick(square) {
+    if (selectedSquare) {
+      const newGame = new Chess(game.fen());
+
+      const move = newGame.move({
+        from: selectedSquare,
+        to: square,
+        promotion: 'q'
       });
 
-      if(move){
+      if (move) {
         document.getElementById("moveSound").play();
-        setHistory(h=>[...h,move.san]);
-        if(move.captured) setCaptured(c=>[...c,move.captured]);
-        setLastMove([move.from,move.to]);
-        localStorage.setItem("savedGame",game.fen());
-        if(game.game_over()) setShowModal(true);
 
-        setGame(new Chess(game.fen()));
+        setGame(newGame);
+        setHistory(prev => [...prev, move.san]);
+
+        if (move.captured) {
+          setCaptured(prev => [...prev, move.captured]);
+        }
+
+        setLastMove([move.from, move.to]);
+        localStorage.setItem("savedGame", newGame.fen());
+
+        if (newGame.game_over()) setShowModal(true);
+
         setSelectedSquare(null);
         setOptionSquares([]);
         return;
@@ -88,18 +101,18 @@ function ChessApp() {
     }
 
     const piece = game.get(square);
-    if(piece && piece.color===game.turn()){
+    if (piece && piece.color === game.turn()) {
       setSelectedSquare(square);
-      const moves = game.moves({square,verbose:true});
-      setOptionSquares(moves.map(m=>m.to));
+      const moves = game.moves({ square, verbose: true });
+      setOptionSquares(moves.map(m => m.to));
     } else {
       setSelectedSquare(null);
       setOptionSquares([]);
     }
   }
 
-  function resetGame(){
-    const newGame=new Chess();
+  function resetGame() {
+    const newGame = new Chess();
     setGame(newGame);
     setHistory([]);
     setCaptured([]);
@@ -110,31 +123,33 @@ function ChessApp() {
     localStorage.removeItem("savedGame");
   }
 
- function undoMove() {
-  const newGame = new Chess(game.fen());
-  const undoneMove = newGame.undo();
-  if (!undoneMove) return;
-  setGame(new Chess(newGame.fen()));
-  setHistory(h => h.slice(0, -1));
-  if (undoneMove.captured) {
-    setCaptured(c => c.slice(0, -1));
-  }
-  setLastMove(null);
-  localStorage.setItem("savedGame", newGame.fen());
-}
+  function undoMove() {
+    const newGame = new Chess(game.fen());
+    const undoneMove = newGame.undo();
+    if (!undoneMove) return;
 
+    setGame(newGame);
+    setHistory(prev => prev.slice(0, -1));
 
-  function status(){
-    if(game.in_checkmate())
-      return `Checkmate! ${game.turn()==='w'?'Black':'White'} wins.`;
-    if(game.in_draw()) return "Draw!";
-    return `${game.turn()==='w'?"White":"Black"}'s Turn`;
+    if (undoneMove.captured) {
+      setCaptured(prev => prev.slice(0, -1));
+    }
+
+    setLastMove(null);
+    localStorage.setItem("savedGame", newGame.fen());
   }
 
-  return(
+  function status() {
+    if (game.in_checkmate())
+      return `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins.`;
+    if (game.in_draw()) return "Draw!";
+    return `${game.turn() === 'w' ? "White" : "Black"}'s Turn`;
+  }
+
+  return (
     <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-      {/* Left Panel */}
+      {/* LEFT PANEL */}
       <div className="flex flex-col items-center gap-4">
         <h1 className="text-3xl font-bold text-yellow-400">
           Enhanced React Chess
@@ -145,88 +160,32 @@ function ChessApp() {
           <div>Black: {blackTime}s</div>
         </div>
 
-        <p className={`text-lg font-medium ${game.in_check()?'text-red-500 animate-bounce':'text-gray-300'}`}>
+        <p className={`text-lg font-medium ${game.in_check() ? 'text-red-500 animate-bounce' : 'text-gray-300'}`}>
           {status()}
         </p>
 
-        {/* Board */}
+        {/* BOARD */}
         <div className="grid grid-cols-8 border-4 border-gray-700 shadow-2xl">
-          {board.map((row,i)=>
-            row.map((square,j)=>{
-              const squareLabel=getSquareLabel(i,j);
-              const isDark=(i+j)%2===1;
-              const isSelected=selectedSquare===squareLabel;
-              const isOption=optionSquares.includes(squareLabel);
-              const isLast=lastMove?.includes(squareLabel);
+          {board.map((row, i) =>
+            row.map((square, j) => {
+              const squareLabel = getSquareLabel(i, j);
+              const isDark = (i + j) % 2 === 1;
+              const isSelected = selectedSquare === squareLabel;
+              const isOption = optionSquares.includes(squareLabel);
+              const isLast = lastMove?.includes(squareLabel);
 
-              return(
-                <div key={squareLabel}
-                  onClick={()=>handleSquareClick(squareLabel)}
+              return (
+                <div
+                  key={squareLabel}
+                  onClick={() => handleSquareClick(squareLabel)}
                   className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center text-4xl cursor-pointer relative
-                  ${isDark?themes[theme][1]:themes[theme][0]}
-                  ${isSelected?'ring-4 ring-yellow-300':''}
-                  ${isLast?'ring-4 ring-green-400':''}`}
+                  ${isDark ? themes[theme][1] : themes[theme][0]}
+                  ${isSelected ? 'ring-4 ring-yellow-300' : ''}
+                  ${isLast ? 'ring-4 ring-green-400' : ''}`}
                 >
                   {isOption && (
                     <div className="absolute w-4 h-4 bg-black/30 rounded-full"></div>
                   )}
-                  <span className={`${square?.color==='w'?'text-white drop-shadow':'text-black'}`}>
-                    {square?pieceSymbols[square.color==='w'?square.type.toUpperCase():square.type]:''}
-                  </span>
-                </div>
-              )
-            })
-          )}
-        </div>
-
-        {/* Controls */}
-        <div className="flex gap-3">
-          <button onClick={resetGame} className="bg-red-600 px-4 py-2 rounded">New</button>
-          <button onClick={undoMove} className="bg-blue-600 px-4 py-2 rounded">Undo</button>
-        </div>
-
-        {/* Theme Switch */}
-        <div className="flex gap-2">
-          <button onClick={()=>setTheme("slate")} className="bg-gray-600 px-3 py-1 rounded">Slate</button>
-          <button onClick={()=>setTheme("wood")} className="bg-amber-600 px-3 py-1 rounded">Wood</button>
-          <button onClick={()=>setTheme("neon")} className="bg-purple-600 px-3 py-1 rounded">Neon</button>
-        </div>
-      </div>
-
-      {/* Right Panel */}
-      <div className="bg-gray-800 p-4 rounded-xl w-72 max-h-[500px] overflow-y-auto">
-        <h2 className="font-bold mb-2">Move History</h2>
-        <div className="text-sm space-y-1 mb-4">
-          {history.map((m,i)=>(
-            <div key={i}>{i+1}. {m}</div>
-          ))}
-        </div>
-
-        <h2 className="font-bold mb-2">Captured</h2>
-        <div className="text-2xl">
-          {captured.map((p,i)=>(
-            <span key={i}>{pieceSymbols[p]}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Game Over Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-gray-800 p-8 rounded-xl text-center">
-            <h2 className="text-2xl mb-4">Game Over</h2>
-            <button onClick={resetGame} className="bg-green-600 px-6 py-2 rounded">
-              Play Again
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const root=ReactDOM.createRoot(document.getElementById('root'));
-root.render(<ChessApp />);
-</script>
-</body>
-</html>
+                  <span className={`${square?.color === 'w' ? 'text-white drop-shadow' : 'text-black'}`}>
+                    {square ? pieceSymbols[square.color === 'w'
+                      ? square.type.toUpperCase()
