@@ -110,11 +110,19 @@ function ChessApp() {
     localStorage.removeItem("savedGame");
   }
 
-  function undoMove(){
-    game.undo();
-    setGame(new Chess(game.fen()));
-    setHistory(h=>h.slice(0,-1));
+ function undoMove() {
+  const newGame = new Chess(game.fen());
+  const undoneMove = newGame.undo();
+  if (!undoneMove) return;
+  setGame(new Chess(newGame.fen()));
+  setHistory(h => h.slice(0, -1));
+  if (undoneMove.captured) {
+    setCaptured(c => c.slice(0, -1));
   }
+  setLastMove(null);
+  localStorage.setItem("savedGame", newGame.fen());
+}
+
 
   function status(){
     if(game.in_checkmate())
