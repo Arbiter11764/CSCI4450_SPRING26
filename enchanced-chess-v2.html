@@ -28,7 +28,6 @@ function ChessApp() {
     neon: ['bg-pink-400','bg-purple-900']
   };
 
-  // 🔁 LOAD SAVED GAME
   useEffect(() => {
     const saved = localStorage.getItem("enhancedChess");
     if (saved) {
@@ -46,7 +45,6 @@ function ChessApp() {
     }
   }, []);
 
-  // 💾 SAVE GAME
   useEffect(() => {
     localStorage.setItem("enhancedChess", JSON.stringify({
       fen: game.fen(),
@@ -59,7 +57,6 @@ function ChessApp() {
     }));
   }, [game, history, captured, whiteTime, blackTime, theme, lastMove]);
 
-  // ⏱ Timer
   useEffect(() => {
     const timer = setInterval(() => {
       if (!game.game_over()) {
@@ -180,11 +177,10 @@ function ChessApp() {
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-      {/* 🎵 Background Music */}
       <audio
         ref={musicRef}
-        loop
         src="https://www.youtube.com/watch?v=8YGlzSl6cxU"
+        loop
       />
 
       <div className="flex flex-col items-center gap-4">
